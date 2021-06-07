@@ -1,0 +1,5 @@
+info: Setup serial console to login
+after: mounts
+serial:
+  - getty 115200 ttyLF0
+  - utmpset -w ttyLF0
