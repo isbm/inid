@@ -1,0 +1,29 @@
+info: Short description of this service
+
+# Concurrency
+# after: the service will started after mentioned service done.
+#        Omission of "after" means service does not care of dependencies.
+
+after: something
+
+#
+# order: an integer, indicating which priority this should do.
+#        Priority is unique and clashing orders will cause conflict.
+#        If clashing order found, both services will be run in
+#        a serial fashion, ordered by their name alphabetically.
+
+order: 10
+
+# This is only to override runlevel.env or add something.
+# The format is "key: value" that will be exported as "key=value".
+environment:
+  PATH: /sbin:/bin:/usr/sbin:/usr/bin
+
+# Each line in "concurrent" section is a command on its own, running concurrently
+concurrent:
+  - echo "Hi"
+  - echo "something else"
+
+# Each line in "serial" section is a command that is executed after previous
+serial:
+  - touch /tmp/booted.txt
