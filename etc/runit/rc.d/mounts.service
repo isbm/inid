@@ -1,0 +1,10 @@
+info: Mount main partitions
+
+environment:
+  PATH: /sbin:/bin:/usr/sbin:/usr/bin
+
+concurrent:
+  - mount -n -t proc -o nosuid,noexec,nodev proc /proc
+  - mount -n -t sysfs -o nosuid,noexec,nodev sysfs /sys
+  - mount -t cgroup cgroup /sys/fs/cgroup
+  - mount -o remount,rw /
