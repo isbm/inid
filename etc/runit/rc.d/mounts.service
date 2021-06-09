@@ -1,4 +1,5 @@
 info: Mount main partitions
+stage: 1
 
 environment:
   PATH: /sbin:/bin:/usr/sbin:/usr/bin

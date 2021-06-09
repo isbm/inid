@@ -1,4 +1,6 @@
 info: Setup network
+stage: 2
+after: mounts
 
 environment:
   PATH: /sbin:/bin:/usr/sbin:/usr/bin

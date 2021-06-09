@@ -1,4 +1,5 @@
 info: Setup serial console to login
+stage: 1
 after: mounts
 serial:
   - getty 115200 ttyLF0

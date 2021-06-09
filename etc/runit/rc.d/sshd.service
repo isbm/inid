@@ -1,4 +1,5 @@
 info: Run SSH daemon
+stage: 2
 after: network
 concurrent:
   - /usr/sbin/sshd
