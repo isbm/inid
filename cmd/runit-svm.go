@@ -10,7 +10,5 @@ func main() {
 		panic(err)
 	}
 
-	if err := svm.Run(); err != nil {
-		panic(err)
-	}
+	svm.Run()
 }

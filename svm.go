@@ -64,8 +64,8 @@ func (svm *SVM) Init() error {
 	if err := svm.setRunlevel(); err != nil {
 		return err
 	}
-	// Skip init during runlevel 1.
-	if svm.stage == 1 {
+	// Skip init during runlevel 1 and 3.
+	if svm.stage == 1 || svm.stage == 3 {
 		return nil
 	}
 
@@ -90,10 +90,10 @@ func (svm *SVM) Init() error {
 	return nil
 }
 
-func (svm *SVM) Run() error {
-	// Skip traditional runlevel 1 competely. Everything is happening in runlevel 2.
-	if svm.stage == 1 {
-		return nil
+func (svm *SVM) Run() {
+	// Skip traditional runlevel 1 and 3 competely. Everything is happening in runlevel 2.
+	if svm.stage == 1 || svm.stage == 3 {
+		return
 	}
 
 	// Process runlevels
@@ -103,7 +103,6 @@ func (svm *SVM) Run() error {
 			fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
 			if err := service.Start(); err != nil {
 				fmt.Println("Failed")
-				return err
 			}
 			fmt.Println("Done")
 		}
