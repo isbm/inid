@@ -1,6 +1,8 @@
 package main
 
-import runit_svm "github.com/isbm/runit-svm"
+import (
+	runit_svm "github.com/isbm/runit-svm"
+)
 
 func main() {
 	svm := runit_svm.NewSVM()
