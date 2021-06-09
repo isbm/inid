@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -34,20 +35,26 @@ func NewSVM() *SVM {
 
 // Set the runlevel
 func (svm *SVM) setRunlevel() error {
-	me, err := os.Executable()
+	me, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		return fmt.Errorf("Unable to obtain executable: %s", err.Error())
 	}
 
-	if !rtutils.InAny(me, "1", "2", "3") {
+	meRl := path.Base(me)
+	fmt.Println(meRl)
+	if !rtutils.InAny(meRl, "1", "2", "3") {
 		return fmt.Errorf("Please symlink me at /etc/runit/ to '1', '2' or '3'.")
 	}
 
-	s, err := strconv.Atoi(me)
+	s, err := strconv.Atoi(meRl)
 	if err != nil {
 		return err
 	}
 	svm.stage = uint8(s)
+
+	if me != path.Join("/etc/runit", strconv.Itoa(int(svm.stage))) {
+		return fmt.Errorf("I must be put as /etc/runit/%d, not as %s", svm.stage, me)
+	}
 
 	return nil
 }
@@ -56,6 +63,10 @@ func (svm *SVM) setRunlevel() error {
 func (svm *SVM) Init() error {
 	if err := svm.setRunlevel(); err != nil {
 		return err
+	}
+	// Skip init during runlevel 1.
+	if svm.stage == 1 {
+		return nil
 	}
 
 	filenames, err := ioutil.ReadDir(svm.confd)
