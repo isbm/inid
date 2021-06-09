@@ -8,4 +8,16 @@ type ServiceConfiguration struct {
 	Environment map[string]string
 	Serial      []string
 	Concurrent  []string
+	serviceName string
+}
+
+// SetName of the service outside of YAML parsing
+func (sc *ServiceConfiguration) SetName(name string) *ServiceConfiguration {
+	sc.serviceName = name
+	return sc
+}
+
+// GetName of the service
+func (sc *ServiceConfiguration) GetName() string {
+	return sc.serviceName
 }

@@ -3,6 +3,8 @@ package rsvc
 import (
 	"fmt"
 	"io/ioutil"
+	"path"
+	"strings"
 
 	"github.com/buraksezer/processman"
 	"gopkg.in/yaml.v2"
@@ -30,6 +32,9 @@ func (svc *RunitService) Init(descrPath string) error {
 	if err != nil {
 		return fmt.Errorf("Error reading service description: %s", err.Error())
 	}
+
+	// Set name of the service, taken from the filename, always lowercase
+	svc.conf.SetName(strings.ToLower(strings.Split(path.Base(descrPath), ".")[0]))
 
 	if err := yaml.Unmarshal(buff, &svc.conf); err != nil {
 		return fmt.Errorf("Error parsing service configuration: %s", err.Error())
