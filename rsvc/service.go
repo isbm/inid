@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/buraksezer/processman"
+	"github.com/isbm/processman"
 	"gopkg.in/yaml.v2"
 )
 
