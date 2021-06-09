@@ -14,14 +14,18 @@ import (
 
 type SVM struct {
 	confd      string
-	services   []*rsvc.RunitService
+	services   map[uint8]*rsvc.ServiceOrder
 	defaultEnv map[string]string
 	stage      uint8
 }
 
 func NewSVM() *SVM {
 	svm := new(SVM)
-	svm.services = make([]*rsvc.RunitService, 0)
+	svm.services = map[uint8]*rsvc.ServiceOrder{
+		1: rsvc.NewServiceOrder(),
+		2: rsvc.NewServiceOrder(),
+		3: rsvc.NewServiceOrder(),
+	}
 	svm.defaultEnv = map[string]string{"PATH": "/sbin:/bin:/usr/sbin:/usr/bin"}
 	svm.confd = "/etc/runit.d"
 
@@ -69,7 +73,7 @@ func (svm *SVM) Init() error {
 			return err
 		}
 		fmt.Println("Initialised ", s.GetServiceConfiguration().Info, " service")
-		svm.services = append(svm.services, s)
+		svm.services[s.GetServiceConfiguration().Stage].AddSevice(s)
 	}
 
 	return nil
@@ -81,13 +85,17 @@ func (svm *SVM) Run() error {
 		return nil
 	}
 
-	for _, service := range svm.services {
-		fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
-		if err := service.Start(); err != nil {
-			fmt.Println("Failed")
-			return err
+	// Process runlevels
+	for _, runlevel := range []uint8{1, 2, 3} {
+		fmt.Printf("Processing stage %d\n", runlevel)
+		for _, service := range svm.services[runlevel].GetServices() {
+			fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
+			if err := service.Start(); err != nil {
+				fmt.Println("Failed")
+				return err
+			}
+			fmt.Println("Done")
 		}
-		fmt.Println("Done")
 	}
 
 	// Forever loop
