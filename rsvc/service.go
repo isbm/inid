@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/buraksezer/processman"
 	"gopkg.in/yaml.v2"
 )
 
@@ -11,12 +12,15 @@ type RunitService struct {
 	serialCommands     []*RunitServiceCommand
 	concurrentCommands []*RunitServiceCommand
 	conf               *ServiceConfiguration
+	procman            *processman.Processman
+	env                []string
 }
 
 func NewRunitService() *RunitService {
 	svc := new(RunitService)
 	svc.serialCommands = make([]*RunitServiceCommand, 0)
 	svc.concurrentCommands = make([]*RunitServiceCommand, 0)
+	svc.procman = processman.New(nil)
 
 	return svc
 }
@@ -35,6 +39,14 @@ func (svc *RunitService) Init(descrPath string) error {
 	svc.loadSerialCommands()
 
 	return nil
+}
+
+func (svc *RunitService) SetEnviron(env map[string]string) *RunitService {
+	svc.env = make([]string, 0)
+	for k := range env {
+		svc.env = append(svc.env, fmt.Sprintf("%s=%s", k, env[k]))
+	}
+	return svc
 }
 
 func (svc *RunitService) loadSerialCommands() *RunitService {
@@ -60,18 +72,30 @@ func (svc *RunitService) Start() error {
 		return fmt.Errorf("Service was not initialised!")
 	}
 	for _, c := range svc.concurrentCommands {
-		c.Start()
+		go func(rsc *RunitServiceCommand) {
+			_, err := svc.procman.Command(rsc.command, rsc.args, svc.env)
+			if err != nil {
+				fmt.Printf("Error running concurrent command '%s': %s\n", rsc.command, err.Error())
+			}
+		}(c)
 	}
 
 	for _, c := range svc.serialCommands {
-		c.Start()
+		_, err := svc.procman.Command(c.command, c.args, svc.env)
+		if err != nil {
+			fmt.Printf("Error running serial command '%s': %s\n", c.command, err.Error())
+		}
 	}
 
 	return nil
 }
 
+func (svc *RunitService) Kill() error {
+	return svc.procman.KillAll()
+}
+
 func (svc *RunitService) Stop() error {
-	return nil
+	return svc.procman.StopAll()
 }
 
 // Restart service
