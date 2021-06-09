@@ -76,6 +76,11 @@ func (svm *SVM) Init() error {
 }
 
 func (svm *SVM) Run() error {
+	// Skip traditional runlevel 1 competely. Everything is happening in runlevel 2.
+	if svm.stage == 1 {
+		return nil
+	}
+
 	for _, service := range svm.services {
 		fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
 		if err := service.Start(); err != nil {
