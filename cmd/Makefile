@@ -9,7 +9,10 @@ SOURCES = \
 all: update-deps mainbuild strip
 
 mainbuild: $(SOURCES)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -a -tags netgo -ldflags '-w -extldflags "-static"' -o $(OUT) $(SOURCES)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build -a -tags netgo -ldflags '-s -w -extldflags "-static"' -o $(OUT) $(SOURCES)
+
+arm:
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -a -tags netgo -ldflags '-s -w -extldflags "-static"' -o $(OUT) $(SOURCES)
 
 gcc:
 ifneq ($GCCGO,)
