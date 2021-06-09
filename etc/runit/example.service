@@ -8,6 +8,9 @@ info: Short description of this service
 
 after: something
 
+# Runit stage (1, 2 or 3)
+stage: 1
+
 # This is only to override runlevel.env or add something.
 # The format is "key: value" that will be exported as "key=value".
 environment:
