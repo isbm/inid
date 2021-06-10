@@ -112,7 +112,7 @@ func (so *ServiceOrder) Sort() {
 			break
 		}
 		if cycler > 10000 {
-			fmt.Println("Service chain is wrong, cannot quit ordering. Giving up...")
+			fmt.Println("Service chain seems forever cycled. Giving up...")
 			break
 		}
 	}
