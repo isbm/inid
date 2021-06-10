@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -13,21 +14,59 @@ import (
 	"github.com/isbm/runit-svm/rtutils"
 )
 
+type SvmServices struct {
+	services map[uint8]*rsvc.ServiceOrder
+}
+
+func NewSvmServices() *SvmServices {
+	svs := new(SvmServices)
+	svs.services = map[uint8]*rsvc.ServiceOrder{}
+	return svs
+}
+
+func (svs *SvmServices) AddService(service *rsvc.RunitService) {
+	if _, so := svs.services[service.GetServiceConfiguration().Stage]; !so {
+		svs.services[service.GetServiceConfiguration().Stage] = rsvc.NewServiceOrder()
+	}
+	svs.services[service.GetServiceConfiguration().Stage].AddSevice(service)
+}
+
+func (svs *SvmServices) GetStages() []uint8 {
+	stages := []uint8{}
+	for stage := range svs.services {
+		stages = append(stages, stage)
+	}
+	return stages
+}
+
+func (svs *SvmServices) GetRunlevels() []*rsvc.ServiceOrder {
+	slots := []*rsvc.ServiceOrder{}
+	idx := []int{}
+
+	for key := range svs.services {
+		idx = append(idx, int(key))
+	}
+
+	sort.Ints(idx)
+
+	for _, i := range idx {
+		slots = append(slots, svs.services[uint8(i)])
+	}
+
+	return slots
+}
+
 type SVM struct {
 	confd      string
-	services   map[uint8]*rsvc.ServiceOrder
 	defaultEnv map[string]string
+	services   *SvmServices
 	stage      uint8
 }
 
 func NewSVM() *SVM {
 	svm := new(SVM)
-	svm.services = map[uint8]*rsvc.ServiceOrder{
-		1: rsvc.NewServiceOrder(),
-		2: rsvc.NewServiceOrder(),
-		3: rsvc.NewServiceOrder(),
-	}
 	svm.defaultEnv = map[string]string{"PATH": "/sbin:/bin:/usr/sbin:/usr/bin"}
+	svm.services = NewSvmServices()
 	svm.confd = "/etc/runit.d"
 
 	return svm
@@ -40,19 +79,19 @@ func (svm *SVM) setRunlevel() error {
 		return fmt.Errorf("Unable to obtain executable: %s", err.Error())
 	}
 
-	meRl := path.Base(me)
-	fmt.Println(meRl)
-	if !rtutils.InAny(meRl, "1", "2", "3", "init") {
+	meBase := path.Base(me)
+	if !rtutils.InAny(meBase, "1", "2", "3", "init") {
 		return fmt.Errorf("Please symlink me at /etc/runit/ to '1', '2' or '3'. Or directly as /sbin/init")
 	}
 
-	if meRl == "init" {
+	// Compat to runit, run as level 2
+	if meBase == "init" {
 		svm.stage = 2
 		return nil
 	}
 
 	// Put stage for runit
-	s, err := strconv.Atoi(meRl)
+	s, err := strconv.Atoi(meBase)
 	if err != nil {
 		return err
 	}
@@ -90,28 +129,26 @@ func (svm *SVM) Init() error {
 			return err
 		}
 		fmt.Println("Initialised ", s.GetServiceConfiguration().Info, " service")
-		svm.services[s.GetServiceConfiguration().Stage].AddSevice(s)
+		svm.services.AddService(s)
 	}
 
-	// Rearrange orders
-	fmt.Println("Rearranging")
-	for _, order := range svm.services {
-		order.Sort()
+	// Rearrange runlevel ordering
+	for _, runlevel := range svm.services.GetRunlevels() {
+		runlevel.Sort()
 	}
 
 	return nil
 }
 
 func (svm *SVM) Run() {
-	// Skip traditional runlevel 1 and 3 competely. Everything is happening in runlevel 2.
+	// For runit integration, skip traditional runlevel 1 and 3 competely. Everything is happening in runlevel 2.
 	if svm.stage == 1 || svm.stage == 3 {
 		return
 	}
 
-	// Process runlevels
-	for _, runlevel := range []uint8{1, 2, 3} {
-		fmt.Printf("Processing stage %d\n", runlevel)
-		for _, service := range svm.services[runlevel].GetServices() {
+	for idx, runlevel := range svm.services.GetRunlevels() {
+		fmt.Printf("Processing stage %d\n", idx+1)
+		for _, service := range runlevel.GetServices() {
 			fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
 			if err := service.Start(); err != nil {
 				fmt.Println("Failed")
