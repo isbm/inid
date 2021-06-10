@@ -23,7 +23,7 @@ func (so *ServiceOrder) popService(idx int) {
 	so.services = so.services[:len(so.services)-1]
 }
 
-func (so *ServiceOrder) addBefore(set []*RunitService, service *RunitService) ([]*RunitService, bool) {
+func (so *ServiceOrder) insertOrder(set []*RunitService, service *RunitService) ([]*RunitService, bool) {
 	buff := []*RunitService{}
 	added := false
 	for _, s := range set {
@@ -31,20 +31,9 @@ func (so *ServiceOrder) addBefore(set []*RunitService, service *RunitService) ([
 			buff = append(buff, service)
 			buff = append(buff, s)
 			added = true
-		} else {
-			buff = append(buff, s)
-		}
-	}
-	return buff, added
-}
-
-func (so *ServiceOrder) addAfter(set []*RunitService, service *RunitService) ([]*RunitService, bool) {
-	buff := []*RunitService{}
-	added := false
-	for _, s := range set {
-		if s.conf.GetName() == service.conf.After {
-			buff = append(buff, s)
+		} else if s.conf.GetName() == service.conf.After {
 			buff = append(buff, service)
+			buff = append(buff, s)
 			added = true
 		} else {
 			buff = append(buff, s)
@@ -85,7 +74,7 @@ func (so *ServiceOrder) Sort() {
 			if service.conf.After != "" {
 				dependency = true
 				var added bool
-				ordered, added = so.addAfter(ordered, service)
+				ordered, added = so.insertOrder(ordered, service)
 				if added {
 					removed = append(removed, idx)
 				}
@@ -102,7 +91,7 @@ func (so *ServiceOrder) Sort() {
 				fmt.Println("Found candidate for before:", service.conf.GetName())
 				dependency = true
 				var added bool
-				ordered, added = so.addBefore(ordered, service)
+				ordered, added = so.insertOrder(ordered, service)
 				if added {
 					removed = append(removed, idx)
 				}
