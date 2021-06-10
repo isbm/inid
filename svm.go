@@ -42,10 +42,16 @@ func (svm *SVM) setRunlevel() error {
 
 	meRl := path.Base(me)
 	fmt.Println(meRl)
-	if !rtutils.InAny(meRl, "1", "2", "3") {
-		return fmt.Errorf("Please symlink me at /etc/runit/ to '1', '2' or '3'.")
+	if !rtutils.InAny(meRl, "1", "2", "3", "init") {
+		return fmt.Errorf("Please symlink me at /etc/runit/ to '1', '2' or '3'. Or directly as /sbin/init")
 	}
 
+	if meRl == "init" {
+		svm.stage = 2
+		return nil
+	}
+
+	// Put stage for runit
 	s, err := strconv.Atoi(meRl)
 	if err != nil {
 		return err
@@ -85,6 +91,12 @@ func (svm *SVM) Init() error {
 		}
 		fmt.Println("Initialised ", s.GetServiceConfiguration().Info, " service")
 		svm.services[s.GetServiceConfiguration().Stage].AddSevice(s)
+	}
+
+	// Rearrange orders
+	fmt.Println("Rearranging")
+	for _, order := range svm.services {
+		order.Sort()
 	}
 
 	return nil
