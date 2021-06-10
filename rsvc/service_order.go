@@ -18,9 +18,23 @@ func (so *ServiceOrder) AddSevice(service *RunitService) *ServiceOrder {
 	return so
 }
 
-func (so *ServiceOrder) popService(idx int) {
-	so.services[len(so.services)-1], so.services[idx] = so.services[idx], so.services[len(so.services)-1]
-	so.services = so.services[:len(so.services)-1]
+func (so *ServiceOrder) inArray(v string, a []string) bool {
+	for _, n := range a {
+		if n == v {
+			return true
+		}
+	}
+	return false
+}
+
+func (so *ServiceOrder) popServices(names []string) {
+	svc := []*RunitService{}
+	for _, s := range so.services {
+		if !so.inArray(s.conf.GetName(), names) {
+			svc = append(svc, s)
+		}
+	}
+	so.services = svc
 }
 
 func (so *ServiceOrder) insertOrder(set []*RunitService, service *RunitService) ([]*RunitService, bool) {
@@ -32,8 +46,8 @@ func (so *ServiceOrder) insertOrder(set []*RunitService, service *RunitService) 
 			buff = append(buff, s)
 			added = true
 		} else if s.conf.GetName() == service.conf.After {
-			buff = append(buff, service)
 			buff = append(buff, s)
+			buff = append(buff, service)
 			added = true
 		} else {
 			buff = append(buff, s)
@@ -46,18 +60,16 @@ func (so *ServiceOrder) Sort() {
 	ordered := []*RunitService{}
 
 	// Add services those have no deps
-	removed := []int{}
-	for idx, service := range so.services {
+	removed := []string{}
+	for _, service := range so.services {
 		if service.conf.After == "" && service.conf.Before == "" {
 			ordered = append(ordered, service)
-			removed = append(removed, idx)
+			removed = append(removed, service.conf.GetName())
 		}
 	}
 
 	// Delete moved
-	for _, idx := range removed {
-		so.popService(idx)
-	}
+	so.popServices(removed)
 
 	// Stop, if there are no root services to hook on
 	if len(ordered) == 0 {
@@ -69,38 +81,30 @@ func (so *ServiceOrder) Sort() {
 	cycler := 0
 	for {
 		dependency := false
-		removed = []int{}
-		for idx, service := range so.services {
-			if service.conf.After != "" {
-				dependency = true
-				var added bool
-				ordered, added = so.insertOrder(ordered, service)
-				if added {
-					removed = append(removed, idx)
-				}
-			}
-		}
-		// Delete moved
-		for _, idx := range removed {
-			so.popService(idx)
-		}
+		removed = []string{}
+		for _, cdx := range []int{1, 2} {
+			for _, service := range so.services {
+				var crit string
 
-		removed = []int{}
-		for idx, service := range so.services {
-			if service.conf.Before != "" {
-				fmt.Println("Found candidate for before:", service.conf.GetName())
-				dependency = true
-				var added bool
-				ordered, added = so.insertOrder(ordered, service)
-				if added {
-					removed = append(removed, idx)
+				switch cdx {
+				case 1:
+					crit = service.conf.After
+				case 2:
+					crit = service.conf.Before
+				}
+
+				if crit != "" {
+					dependency = true
+					var added bool
+					ordered, added = so.insertOrder(ordered, service)
+					if added {
+						removed = append(removed, service.conf.GetName())
+					}
 				}
 			}
 		}
 		// Delete moved
-		for _, idx := range removed {
-			so.popService(idx)
-		}
+		so.popServices(removed)
 
 		cycler++
 
