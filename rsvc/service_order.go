@@ -118,11 +118,6 @@ func (so *ServiceOrder) Sort() {
 	}
 
 	so.services = ordered
-
-	fmt.Println("Services in this scope:")
-	for idx, s := range so.services {
-		fmt.Printf("%d. %s\n", idx+1, s.conf.serviceName)
-	}
 }
 
 // GetServices
