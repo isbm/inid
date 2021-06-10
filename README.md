@@ -5,10 +5,11 @@ system, similar (and inspired by) to `systemd`, written in Go. It can
 be used as an extension to `runit` init system (built-in into a
 Busybox) or used on its own directly.
 
-The reason to develop this was to have very similar behavior like
-systemd with parallel services execution, no need of tracking pids and
-forks like in old good SysV. Another goal is to have an init system,
-which is using no shell. As well as keep all this really minimal.
+The reason to develop an init system, is to have a very small init system,
+but with a similar behavior like systemd, such as parallel services execution,
+no need of tracking pids and forks like in old good SysV etc. Another goal
+is to have an init system, which is using no shell but is fully binary,
+statically linked code. As well as to keep it all really minimal.
 
 ## Service Example
 
