@@ -128,7 +128,6 @@ func (svm *SVM) Init() error {
 		if err := s.Init(spath); err != nil {
 			return err
 		}
-		fmt.Println("Initialised ", s.GetServiceConfiguration().Info, " service")
 		svm.services.AddService(s)
 	}
 
