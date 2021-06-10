@@ -78,7 +78,7 @@ func (svc *RunitService) Start() error {
 	}
 	for _, c := range svc.concurrentCommands {
 		go func(rsc *RunitServiceCommand) {
-			_, err := svc.procman.Command(rsc.command, rsc.args, svc.env)
+			_, err := svc.procman.StartConcurrent(rsc.command, rsc.args, svc.env)
 			if err != nil {
 				fmt.Printf("Error running concurrent command '%s': %s\n", rsc.command, err.Error())
 			}
@@ -86,7 +86,7 @@ func (svc *RunitService) Start() error {
 	}
 
 	for _, c := range svc.serialCommands {
-		_, err := svc.procman.Command(c.command, c.args, svc.env)
+		_, err := svc.procman.StartSerial(c.command, c.args, svc.env)
 		if err != nil {
 			fmt.Printf("Error running serial command '%s': %s\n", c.command, err.Error())
 		}
