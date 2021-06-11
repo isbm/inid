@@ -6,8 +6,8 @@ github.com/hashicorp/go-multierror v1.1.0 h1:B9UzwGQJehnUY1yNrnwREHc3fGbC2xefo8g
 github.com/hashicorp/go-multierror v1.1.0/go.mod h1:spPvp8C1qA32ftKqdAHm4hHTbPw+vmowP0z+KUhOZdA=
 github.com/hashicorp/go-multierror v1.1.1 h1:H5DkEtf6CXdFp0N0Em5UCwQpXMWke8IA0+lD48awMYo=
 github.com/hashicorp/go-multierror v1.1.1/go.mod h1:iw975J/qwKPdAO1clOe2L8331t/9/fmwbPZ6JB6eMoM=
-github.com/isbm/processman v0.1.2 h1:74Tu13ePWi/RF3XQiEwaHYPSKCLZ+7nH9fGELsqzllc=
-github.com/isbm/processman v0.1.2/go.mod h1:QY+JYRfDcv+wZHRwJFUBuJyB8Y/l9Y6Fylf7scUfzww=
+github.com/isbm/processman v0.1.3-0.20210611180320-d8811ea39f62 h1:LP5VXir/ufm3UUjp7xNaRo49H4VvUHSlAnikAXO2fJE=
+github.com/isbm/processman v0.1.3-0.20210611180320-d8811ea39f62/go.mod h1:QY+JYRfDcv+wZHRwJFUBuJyB8Y/l9Y6Fylf7scUfzww=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.4.0 h1:D8xgwECY7CYvx+Y2n4sBz93Jn9JRvxdiyyo8CTfuKaY=
