@@ -3,6 +3,7 @@ package rsvc
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path"
 	"strings"
 
@@ -72,15 +73,21 @@ func (svc *RunitService) GetServiceConfiguration() *ServiceConfiguration {
 	return svc.conf
 }
 
+func (svc *RunitService) GetProcesses() map[int]*processman.Process {
+	return svc.procman.Processes()
+}
+
 func (svc *RunitService) Start() error {
 	if svc.conf == nil {
 		return fmt.Errorf("Service was not initialised!")
 	}
+	failed := false
 	for _, c := range svc.concurrentCommands {
 		go func(rsc *RunitServiceCommand) {
 			_, err := svc.procman.StartConcurrent(rsc.command, rsc.args, svc.env)
 			if err != nil {
-				fmt.Printf("Error running concurrent command '%s': %s\n", rsc.command, err.Error())
+				log.Printf("Service %s failed background command '%s': %s\n", svc.GetServiceConfiguration().GetName(), rsc.command, err.Error())
+				failed = true
 			}
 		}(c)
 	}
@@ -88,8 +95,14 @@ func (svc *RunitService) Start() error {
 	for _, c := range svc.serialCommands {
 		_, err := svc.procman.StartSerial(c.command, c.args, svc.env)
 		if err != nil {
-			fmt.Printf("Error running serial command '%s': %s\n", c.command, err.Error())
+			log.Printf("Service %s failed serial command '%s': %s\n", svc.GetServiceConfiguration().GetName(), c.command, err.Error())
+			failed = true
 		}
+	}
+	if !failed {
+		log.Printf("Service %s started successfully\n", svc.GetServiceConfiguration().GetName())
+	} else {
+		log.Printf("Service %s failed\n", svc.GetServiceConfiguration().GetName())
 	}
 
 	return nil
