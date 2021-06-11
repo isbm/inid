@@ -11,7 +11,7 @@ import (
 
 func main() {
 	mode := path.Base(os.Args[0])
-	if mode == "sysctl" {
+	if mode == "inidctl" {
 		if err := sysctl.NewSvmCtl().Run(); err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
 		}
