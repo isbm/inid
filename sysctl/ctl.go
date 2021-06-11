@@ -16,8 +16,8 @@ type SvmCtl struct {
 
 func NewSvmCtl() *SvmCtl {
 	ctl := new(SvmCtl)
-	ctl.inidSocket = "/tmp/run/inid-cli.socket"
-	ctl.inidSocket = "/tmp/run/inid.socket"
+	ctl.inidSocket = "/tmp/inid-cli.socket"
+	ctl.inidSocket = "/tmp/inid.socket"
 	return ctl
 }
 

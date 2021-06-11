@@ -21,7 +21,7 @@ type IPCServer struct {
 
 func NewIPCServer(services *rsvc.SvmServices) *IPCServer {
 	ipc := new(IPCServer)
-	ipc.socketDir = "/tmp/run"
+	ipc.socketDir = "/tmp"
 	ipc.socketPath = path.Join(ipc.socketDir, "inid.socket")
 	ipc.services = services
 	ipc.connect()
