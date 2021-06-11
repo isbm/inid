@@ -3,10 +3,10 @@ package runit_svm
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -14,59 +14,17 @@ import (
 	"github.com/isbm/runit-svm/rtutils"
 )
 
-type SvmServices struct {
-	services map[uint8]*rsvc.ServiceOrder
-}
-
-func NewSvmServices() *SvmServices {
-	svs := new(SvmServices)
-	svs.services = map[uint8]*rsvc.ServiceOrder{}
-	return svs
-}
-
-func (svs *SvmServices) AddService(service *rsvc.RunitService) {
-	if _, so := svs.services[service.GetServiceConfiguration().Stage]; !so {
-		svs.services[service.GetServiceConfiguration().Stage] = rsvc.NewServiceOrder()
-	}
-	svs.services[service.GetServiceConfiguration().Stage].AddSevice(service)
-}
-
-func (svs *SvmServices) GetStages() []uint8 {
-	stages := []uint8{}
-	for stage := range svs.services {
-		stages = append(stages, stage)
-	}
-	return stages
-}
-
-func (svs *SvmServices) GetRunlevels() []*rsvc.ServiceOrder {
-	slots := []*rsvc.ServiceOrder{}
-	idx := []int{}
-
-	for key := range svs.services {
-		idx = append(idx, int(key))
-	}
-
-	sort.Ints(idx)
-
-	for _, i := range idx {
-		slots = append(slots, svs.services[uint8(i)])
-	}
-
-	return slots
-}
-
 type SVM struct {
 	confd      string
 	defaultEnv map[string]string
-	services   *SvmServices
+	services   *rsvc.SvmServices
 	stage      uint8
 }
 
 func NewSVM() *SVM {
 	svm := new(SVM)
 	svm.defaultEnv = map[string]string{"PATH": "/sbin:/bin:/usr/sbin:/usr/bin"}
-	svm.services = NewSvmServices()
+	svm.services = rsvc.NewSvmServices()
 	svm.confd = "/etc/runit.d"
 
 	return svm
@@ -140,24 +98,23 @@ func (svm *SVM) Init() error {
 }
 
 func (svm *SVM) Run() {
+	defer func() {
+		if err := recover(); err != nil {
+			log.Printf("Oops, panic occurred: %v\n", err)
+		}
+	}()
 	// For runit integration, skip traditional runlevel 1 and 3 competely. Everything is happening in runlevel 2.
 	if svm.stage == 1 || svm.stage == 3 {
 		return
 	}
 
 	for idx, runlevel := range svm.services.GetRunlevels() {
-		fmt.Printf("Processing stage %d\n", idx+1)
+		log.Printf("--- Service stage %d\n", idx+1)
 		for _, service := range runlevel.GetServices() {
-			fmt.Print("Starting ", service.GetServiceConfiguration().Info, " ... ")
 			if err := service.Start(); err != nil {
-				fmt.Println("Failed")
+				log.Printf("Error occurred: %s", err.Error())
 			}
-			fmt.Println("Done")
 		}
 	}
-
-	// Forever loop
-	for {
-		select {}
-	}
+	NewIPCServer(svm.services).ServeForever()
 }
