@@ -129,7 +129,9 @@ func (ipc *IPCServer) shutdown() {
 	for _, runlevel := range ipc.services.GetRunlevels() {
 		for _, s := range runlevel.GetServices() {
 			log.Printf("Stopping %s...\n", s.GetServiceConfiguration().GetName())
-			s.Kill()
+			if err := s.Kill(); err != nil {
+				log.Printf("[ERROR] Error terminating service %s: %s", s.GetServiceConfiguration().GetName(), err.Error())
+			}
 		}
 	}
 }
