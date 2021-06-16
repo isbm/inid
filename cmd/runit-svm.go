@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	runit_svm "github.com/isbm/runit-svm"
-	"github.com/isbm/runit-svm/sysctl"
+	"github.com/isbm/inid"
+	"github.com/isbm/inid/sysctl"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		}
 	} else {
 		// Init system mode
-		svm := runit_svm.NewSVM()
+		svm := inid.NewSVM()
 		if err := svm.Init(); err != nil { // Look for /etc/runit/rc.d and load the map
 			panic(err)
 		}
