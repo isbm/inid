@@ -6,8 +6,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 
 	"github.com/isbm/runit-svm/rsvc"
 )
@@ -123,6 +125,15 @@ func (ipc *IPCServer) stop(name string) string {
 	return fmt.Sprintf("Service %s has been stopped", service.GetServiceConfiguration().GetName())
 }
 
+func (ipc *IPCServer) shutdown() {
+	for _, runlevel := range ipc.services.GetRunlevels() {
+		for _, s := range runlevel.GetServices() {
+			log.Printf("Stopping %s...\n", s.GetServiceConfiguration().GetName())
+			s.Kill()
+		}
+	}
+}
+
 func (ipc *IPCServer) list() string {
 	var buff bytes.Buffer
 	for idx, runlevel := range ipc.services.GetRunlevels() {
@@ -136,6 +147,19 @@ func (ipc *IPCServer) list() string {
 }
 
 func (ipc *IPCServer) ServeForever() {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+
+	go func(ipc *IPCServer) {
+		<-sc
+		ipc.shutdown()
+		os.Exit(0)
+	}(ipc)
+
 	log.Printf("--- Final stage")
 	if ipc.listener != nil {
 		defer os.Remove(ipc.socketPath)
