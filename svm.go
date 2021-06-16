@@ -78,7 +78,9 @@ func (svm *SVM) Init() error {
 	}
 
 	for _, servConfPath := range filenames {
-		if !strings.HasSuffix(servConfPath.Name(), ".service") {
+		scpath := strings.Split(servConfPath.Name(), ".")
+		kind := scpath[len(scpath)-1]
+		if kind != "service" {
 			continue
 		}
 		s := rsvc.NewRunitService().SetEnviron(svm.defaultEnv)
