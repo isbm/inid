@@ -11,8 +11,8 @@ type ServiceConfiguration struct {
 	Before      string
 	Stage       uint8
 	Environment map[string]string
-	Serial      []string
-	Concurrent  []string
+	Serial      interface{}
+	Concurrent  interface{}
 	serviceName string
 	kind        int
 }
@@ -37,4 +37,40 @@ func (sc *ServiceConfiguration) SetKind(kind int) *ServiceConfiguration {
 // GetKind of the service
 func (sc *ServiceConfiguration) GetKind() int {
 	return sc.kind
+}
+
+// GetConcurrentCommands returns an array of strings, each is a command to execute in parallel
+func (sc *ServiceConfiguration) GetConcurrentCommands() []string {
+	return sc.getCommands(sc.Concurrent)
+}
+
+// GetSerialCommands returns an array of strings, each is a command to execute in serial sequence
+func (sc *ServiceConfiguration) GetSerialCommands() []string {
+	return sc.getCommands(sc.Serial)
+}
+
+// GetConcurrentConfig returns a general map->map->interface config to run a service concurrently
+func (sc *ServiceConfiguration) GetConcurrentConfig() map[string]map[string]interface{} {
+	return sc.getConfig(sc.Concurrent)
+}
+
+// GetSerialConfig returns a general map->map->interface config to run a service in a sequence
+func (sc *ServiceConfiguration) GetSerialConfig() map[string]map[string]interface{} {
+	return sc.getConfig(sc.Serial)
+}
+
+func (sc *ServiceConfiguration) getCommands(data interface{}) []string {
+	switch data := data.(type) {
+	case []string:
+		return data
+	}
+	return []string{}
+}
+
+func (sc *ServiceConfiguration) getConfig(data interface{}) map[string]map[string]interface{} {
+	switch data := data.(type) {
+	case map[string]map[string]interface{}:
+		return data
+	}
+	return make(map[string]map[string]interface{})
 }

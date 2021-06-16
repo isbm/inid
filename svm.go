@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/isbm/runit-svm/rsvc"
-	"github.com/isbm/runit-svm/rtutils"
+	"github.com/isbm/inid/rsvc"
+	"github.com/isbm/inid/rtutils"
 )
 
 type SVM struct {
@@ -80,13 +80,19 @@ func (svm *SVM) Init() error {
 	for _, servConfPath := range filenames {
 		scpath := strings.Split(servConfPath.Name(), ".")
 		kind := scpath[len(scpath)-1]
-		if kind != "service" {
+		if kind != "service" && kind != "mount" {
 			continue
 		}
 		s := rsvc.NewRunitService().SetEnviron(svm.defaultEnv)
 		spath := path.Join(svm.confd, servConfPath.Name())
 		if err := s.Init(spath); err != nil {
 			return err
+		}
+		switch kind {
+		case "service":
+			s.GetServiceConfiguration().SetKind(rsvc.SVC_SERVICE)
+		case "mount":
+			s.GetServiceConfiguration().SetKind(rsvc.SVC_MOUNTER)
 		}
 		svm.services.AddService(s)
 	}

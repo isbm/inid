@@ -56,14 +56,14 @@ func (svc *RunitService) SetEnviron(env map[string]string) *RunitService {
 }
 
 func (svc *RunitService) loadSerialCommands() *RunitService {
-	for _, command := range svc.conf.Serial {
+	for _, command := range svc.conf.GetSerialCommands() {
 		svc.serialCommands = append(svc.serialCommands, NewRunitServiceCommand(command).SetConcurrent(false))
 	}
 	return svc
 }
 
 func (svc *RunitService) loadConcurrentCommands() *RunitService {
-	for _, command := range svc.conf.Concurrent {
+	for _, command := range svc.conf.GetConcurrentCommands() {
 		svc.concurrentCommands = append(svc.concurrentCommands, NewRunitServiceCommand(command).SetConcurrent(true))
 	}
 	return svc
@@ -78,6 +78,25 @@ func (svc *RunitService) GetProcesses() map[int]*processman.Process {
 }
 
 func (svc *RunitService) Start() error {
+	switch svc.GetServiceConfiguration().GetKind() {
+	case SVC_SERVICE:
+		return svc.startService()
+	case SVC_MOUNTER:
+		return svc.startMounter()
+	default:
+		return fmt.Errorf("Unknown service type")
+	}
+}
+
+func (svc *RunitService) startMounter() error {
+	if svc.conf == nil {
+		return fmt.Errorf("Mounter service was not initialised!")
+	}
+	//m := initdmounter.NewInidPremounter(svc.conf)
+	return nil
+}
+
+func (svc *RunitService) startService() error {
 	if svc.conf == nil {
 		return fmt.Errorf("Service was not initialised!")
 	}
