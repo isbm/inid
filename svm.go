@@ -1,4 +1,4 @@
-package runit_svm
+package inid
 
 import (
 	"fmt"

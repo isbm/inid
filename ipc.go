@@ -1,4 +1,4 @@
-package runit_svm
+package inid
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/isbm/runit-svm/rsvc"
+	"github.com/isbm/inid/rsvc"
 )
 
 type IPCServer struct {

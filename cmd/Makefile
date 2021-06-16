@@ -1,4 +1,4 @@
-OUT := runit-svm
+OUT := inid
 DISTRO := $(shell cat /etc/os-release | grep '^NAME=' | sed -e 's/.*=//')
 GCCGO :=
 GO := go
