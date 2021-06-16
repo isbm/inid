@@ -1,5 +1,4 @@
-cmd/runit-svm
-cmd/1
-cmd/2
-cmd/3
+cmd/inid
+cmd/inidctl
+cmd/init
 etc/runit/bogus.d
