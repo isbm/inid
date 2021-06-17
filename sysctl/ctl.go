@@ -47,13 +47,15 @@ func (ctl *SvmCtl) send(msg string) {
 	laddr := net.UnixAddr{Name: ctl.inidClientSocket, Net: proto}
 	conn, err := net.DialUnix(proto, &laddr, &net.UnixAddr{Name: ctl.inidSocket, Net: proto})
 	if err != nil {
-		panic(err)
+		fmt.Println("Unable to connect. Is inid running?", err.Error())
+		os.Exit(1)
 	}
 
 	defer os.Remove(ctl.inidClientSocket)
 	_, err = conn.Write([]byte(msg))
 	if err != nil {
-		panic(err)
+		fmt.Println("Unable to send the command:", err.Error())
+		os.Exit(1)
 	}
 	ctl.read(conn)
 	conn.Close()
