@@ -1,5 +1,9 @@
 package rsvc
 
+import (
+	"log"
+)
+
 const (
 	SVC_MOUNTER = iota + 1
 	SVC_SERVICE
@@ -68,9 +72,30 @@ func (sc *ServiceConfiguration) getCommands(data interface{}) []string {
 }
 
 func (sc *ServiceConfiguration) getConfig(data interface{}) map[string]map[string]interface{} {
+	buff := make(map[string]map[string]interface{})
 	switch data := data.(type) {
-	case map[string]map[string]interface{}:
-		return data
+	case map[interface{}]interface{}:
+		for device, conf := range data {
+			switch device := device.(type) {
+			case string:
+				switch conf := conf.(type) {
+				case map[interface{}]interface{}:
+					devConf := make(map[string]interface{})
+					for kConf, vConf := range conf {
+						if kdata, ok := kConf.(string); ok {
+							devConf[kdata] = vConf
+						} else {
+							log.Printf("Unsupported type for key %v in configuration for device %s", kConf, device)
+						}
+					}
+					buff[device] = devConf
+				default:
+					log.Printf("Unsupported configuration for device %s", device)
+				}
+			default:
+				log.Printf("Unsupported type in mounter configuration for device %s", device)
+			}
+		}
 	}
-	return make(map[string]map[string]interface{})
+	return buff
 }
