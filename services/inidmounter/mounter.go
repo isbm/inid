@@ -91,7 +91,7 @@ func (ipm *InidPremounter) Umount(point string) error {
 	// Remove the custom directory, pre-created by mount
 	// To get those, iterate over the collected
 	for _, cd := range ipm.createdDirs {
-		fmt.Printf("Remove dir %s\n", cd)
+		log.Printf("Remove dir %s\n", cd)
 	}
 	return nil
 }
@@ -99,8 +99,6 @@ func (ipm *InidPremounter) Umount(point string) error {
 func (ipm *InidPremounter) bulk(mount bool) []error {
 	errors := []error{}
 	for device, conf := range ipm.conf {
-		log.Printf("Device '%s' configured as '%v'\n", device, conf)
-
 		var fstype string
 		var mpath string
 		var opts string
@@ -134,12 +132,11 @@ func (ipm *InidPremounter) bulk(mount bool) []error {
 		}
 
 		if mount {
-			fmt.Printf("Mounting device '%s' to dir '%s' as type '%s' with options '%s'\n", device, mpath, fstype, opts)
 			if err := ipm.Mount(device, fstype, mpath, opts); err != nil {
-				fmt.Printf("Mount error: %s", err.Error())
+				log.Printf("Mount error: %s", err.Error())
 			}
 		} else {
-			fmt.Printf("Unmounting path %s", mpath)
+			log.Printf("Unmounting path %s", mpath)
 		}
 	}
 	return errors
