@@ -64,36 +64,48 @@ func (sc *ServiceConfiguration) GetSerialConfig() map[string]map[string]interfac
 }
 
 func (sc *ServiceConfiguration) getCommands(data interface{}) []string {
-	switch data := data.(type) {
-	case []string:
-		return data
+	if data != nil {
+		switch data := data.(type) {
+		case []interface{}:
+			buff := []string{}
+			for _, item := range data {
+				if tItem, ok := item.(string); ok {
+					buff = append(buff, tItem)
+				}
+			}
+			return buff
+		default:
+			log.Printf("Unsupported type in service configuration: %v", data)
+		}
 	}
 	return []string{}
 }
 
 func (sc *ServiceConfiguration) getConfig(data interface{}) map[string]map[string]interface{} {
 	buff := make(map[string]map[string]interface{})
-	switch data := data.(type) {
-	case map[interface{}]interface{}:
-		for device, conf := range data {
-			switch device := device.(type) {
-			case string:
-				switch conf := conf.(type) {
-				case map[interface{}]interface{}:
-					devConf := make(map[string]interface{})
-					for kConf, vConf := range conf {
-						if kdata, ok := kConf.(string); ok {
-							devConf[kdata] = vConf
-						} else {
-							log.Printf("Unsupported type for key %v in configuration for device %s", kConf, device)
+	if data != nil {
+		switch data := data.(type) {
+		case map[interface{}]interface{}:
+			for device, conf := range data {
+				switch device := device.(type) {
+				case string:
+					switch conf := conf.(type) {
+					case map[interface{}]interface{}:
+						devConf := make(map[string]interface{})
+						for kConf, vConf := range conf {
+							if kdata, ok := kConf.(string); ok {
+								devConf[kdata] = vConf
+							} else {
+								log.Printf("Unsupported type for key %v in configuration for device %s", kConf, device)
+							}
 						}
+						buff[device] = devConf
+					default:
+						log.Printf("Unsupported configuration for device %s", device)
 					}
-					buff[device] = devConf
 				default:
-					log.Printf("Unsupported configuration for device %s", device)
+					log.Printf("Unsupported type in mounter configuration for device %s", device)
 				}
-			default:
-				log.Printf("Unsupported type in mounter configuration for device %s", device)
 			}
 		}
 	}

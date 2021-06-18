@@ -1,12 +1,15 @@
 package rsvc
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"path"
 	"strings"
 
+	"github.com/isbm/inid/rtutils"
+	"github.com/isbm/inid/services/inidmounter"
 	"github.com/isbm/processman"
 	"gopkg.in/yaml.v2"
 )
@@ -89,11 +92,49 @@ func (svc *RunitService) Start() error {
 }
 
 func (svc *RunitService) startMounter() error {
+	log.Printf("Starting mounter service")
 	if svc.conf == nil {
 		return fmt.Errorf("Mounter service was not initialised!")
 	}
-	//m := initdmounter.NewInidPremounter(svc.conf)
+
+	// Start concurrent mounts
+	go func(conf *ServiceConfiguration) {
+		if err := inidmounter.NewInidPremounter(conf.GetConcurrentConfig()).Start(); err != nil {
+			log.Printf("Concurrent mounter %s failed: %s", svc.GetServiceConfiguration().GetName(), err.Error())
+		}
+	}(svc.GetServiceConfiguration())
+
+	// Start serial mounts
+	if err := inidmounter.NewInidPremounter(svc.conf.GetSerialConfig()).Start(); err != nil {
+		log.Printf("Serial mounter %s failed: %s", svc.GetServiceConfiguration().GetName(), err.Error())
+	}
+
 	return nil
+}
+
+func (svc *RunitService) formatSTD(p *processman.Process) string {
+	stream, err := p.Stdout()
+	var buff bytes.Buffer
+	if err == nil {
+		o := strings.TrimSpace(rtutils.RCloser2String(stream))
+		if o != "" {
+			buff.WriteString(o + "\n")
+		}
+	}
+
+	stream, err = p.Stderr()
+	if err == nil {
+		o := strings.TrimSpace(rtutils.RCloser2String(stream))
+		if o != "" {
+			buff.WriteString(o + "\n")
+		}
+	}
+
+	if len(buff.Bytes()) > 0 {
+		return fmt.Sprintf("Output log for process %s:\n%s\n", svc.GetServiceConfiguration().GetName(), buff.String())
+	}
+
+	return ""
 }
 
 func (svc *RunitService) startService() error {
@@ -103,19 +144,23 @@ func (svc *RunitService) startService() error {
 	failed := false
 	for _, c := range svc.concurrentCommands {
 		go func(rsc *RunitServiceCommand) {
-			_, err := svc.procman.StartConcurrent(rsc.command, rsc.args, svc.env)
+			p, err := svc.procman.StartConcurrent(rsc.command, rsc.args, svc.env)
 			if err != nil {
 				log.Printf("Service %s failed background command '%s': %s\n", svc.GetServiceConfiguration().GetName(), rsc.command, err.Error())
 				failed = true
+			} else if out := svc.formatSTD(p); out != "" {
+				log.Println(out)
 			}
 		}(c)
 	}
 
 	for _, c := range svc.serialCommands {
-		_, err := svc.procman.StartSerial(c.command, c.args, svc.env)
+		p, err := svc.procman.StartSerial(c.command, c.args, svc.env)
 		if err != nil {
 			log.Printf("Service %s failed serial command '%s': %s\n", svc.GetServiceConfiguration().GetName(), c.command, err.Error())
 			failed = true
+		} else if out := svc.formatSTD(p); out != "" {
+			log.Println(out)
 		}
 	}
 	if !failed {
