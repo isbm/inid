@@ -117,7 +117,7 @@ func (svm *SVM) Run() {
 	}
 
 	for idx, runlevel := range svm.services.GetRunlevels() {
-		log.Printf("--- Service stage %d\n", idx+1)
+		log.Printf("Entering service stage %d\n", idx+1)
 		for _, service := range runlevel.GetServices() {
 			if err := service.Start(); err != nil {
 				log.Printf("Error occurred: %s", err.Error())

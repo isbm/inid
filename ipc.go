@@ -162,7 +162,7 @@ func (ipc *IPCServer) ServeForever() {
 		os.Exit(0)
 	}(ipc)
 
-	log.Printf("--- Final stage")
+	log.Printf("Entering final stage")
 	if ipc.listener != nil {
 		defer os.Remove(ipc.socketPath)
 		for {
