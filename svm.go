@@ -25,7 +25,7 @@ func NewSVM() *SVM {
 	svm := new(SVM)
 	svm.defaultEnv = map[string]string{"PATH": "/sbin:/bin:/usr/sbin:/usr/bin"}
 	svm.services = rsvc.NewSvmServices()
-	svm.confd = "/etc/runit.d"
+	svm.confd = "/etc/rc.d"
 
 	return svm
 }
@@ -45,6 +45,9 @@ func (svm *SVM) setRunlevel() error {
 	// Compat to runit, run as level 2
 	if meBase == "init" {
 		svm.stage = 2
+		if _, err := os.Stat(svm.confd); os.IsNotExist(err) {
+			return fmt.Errorf("Error accessing %s: %s", svm.confd, err.Error())
+		}
 		return nil
 	}
 
@@ -62,7 +65,7 @@ func (svm *SVM) setRunlevel() error {
 	return nil
 }
 
-// Init the svm by reading /etc/runit.d directory
+// Init the svm by reading /etc/rc.d directory
 func (svm *SVM) Init() error {
 	if err := svm.setRunlevel(); err != nil {
 		return err
