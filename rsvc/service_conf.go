@@ -74,8 +74,6 @@ func (sc *ServiceConfiguration) getCommands(data interface{}) []string {
 				}
 			}
 			return buff
-		default:
-			log.Printf("Unsupported type in service configuration: %v", data)
 		}
 	}
 	return []string{}
