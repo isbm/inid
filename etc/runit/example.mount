@@ -1,0 +1,36 @@
+info: mounting stuff
+stage: 1
+serial:
+  proc:
+    opts: nosuid,noexec,nodev
+    path: /proc
+
+  sysfs:
+    opts: nosuid,noexec,nodev
+    path: /sys
+
+  run:
+    opts: mode=0755,nosuid,nodev
+    path: /run
+    type: tmpfs
+
+  dev:
+    opts: mode=0755,nosuid
+    path: /dev
+    type: devtmpfs
+
+  devpts:
+    opts: mode=0620,gid=5,nosuid,noexec
+    path: /dev/pts
+
+  shm:
+    opts: mode=1777,nosuid,nodev
+    path: /dev/shm
+    type: tmpfs
+
+  cgroup:
+    path: /sys/fs/cgroup
+
+  /:
+    opts: remount,rw
+    path: /
