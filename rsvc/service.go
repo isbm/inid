@@ -14,24 +14,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type RunitService struct {
-	serialCommands     []*RunitServiceCommand
-	concurrentCommands []*RunitServiceCommand
+type RunService struct {
+	serialCommands     []*RunServiceCommand
+	concurrentCommands []*RunServiceCommand
 	conf               *ServiceConfiguration
 	procman            *processman.Processman
-	env                []string
+	BaseService
 }
 
-func NewRunitService() *RunitService {
-	svc := new(RunitService)
-	svc.serialCommands = make([]*RunitServiceCommand, 0)
-	svc.concurrentCommands = make([]*RunitServiceCommand, 0)
+func NewRunService() *RunService {
+	svc := new(RunService)
+	svc.serialCommands = make([]*RunServiceCommand, 0)
+	svc.concurrentCommands = make([]*RunServiceCommand, 0)
 	svc.procman = processman.New(nil)
 
 	return svc
 }
 
-func (svc *RunitService) Init(descrPath string) error {
+func (svc *RunService) Init(descrPath string) error {
 	buff, err := ioutil.ReadFile(descrPath)
 	if err != nil {
 		return fmt.Errorf("Error reading service description: %s", err.Error())
@@ -50,37 +50,29 @@ func (svc *RunitService) Init(descrPath string) error {
 	return nil
 }
 
-func (svc *RunitService) SetEnviron(env map[string]string) *RunitService {
-	svc.env = make([]string, 0)
-	for k := range env {
-		svc.env = append(svc.env, fmt.Sprintf("%s=%s", k, env[k]))
-	}
-	return svc
-}
-
-func (svc *RunitService) loadSerialCommands() *RunitService {
+func (svc *RunService) loadSerialCommands() *RunService {
 	for _, command := range svc.conf.GetSerialCommands() {
-		svc.serialCommands = append(svc.serialCommands, NewRunitServiceCommand(command).SetConcurrent(false))
+		svc.serialCommands = append(svc.serialCommands, NewRunServiceCommand(command).SetConcurrent(false))
 	}
 	return svc
 }
 
-func (svc *RunitService) loadConcurrentCommands() *RunitService {
+func (svc *RunService) loadConcurrentCommands() *RunService {
 	for _, command := range svc.conf.GetConcurrentCommands() {
-		svc.concurrentCommands = append(svc.concurrentCommands, NewRunitServiceCommand(command).SetConcurrent(true))
+		svc.concurrentCommands = append(svc.concurrentCommands, NewRunServiceCommand(command).SetConcurrent(true))
 	}
 	return svc
 }
 
-func (svc *RunitService) GetServiceConfiguration() *ServiceConfiguration {
+func (svc *RunService) GetServiceConfiguration() *ServiceConfiguration {
 	return svc.conf
 }
 
-func (svc *RunitService) GetProcesses() map[int]*processman.Process {
+func (svc *RunService) GetProcesses() map[int]*processman.Process {
 	return svc.procman.Processes()
 }
 
-func (svc *RunitService) Start() error {
+func (svc *RunService) Start() error {
 	switch svc.GetServiceConfiguration().GetKind() {
 	case SVC_SERVICE:
 		return svc.startService()
@@ -91,7 +83,7 @@ func (svc *RunitService) Start() error {
 	}
 }
 
-func (svc *RunitService) startMounter() error {
+func (svc *RunService) startMounter() error {
 	log.Printf("Starting mounter service")
 	if svc.conf == nil {
 		return fmt.Errorf("Mounter service was not initialised!")
@@ -112,7 +104,7 @@ func (svc *RunitService) startMounter() error {
 	return nil
 }
 
-func (svc *RunitService) formatSTD(p *processman.Process) string {
+func (svc *RunService) formatSTD(p *processman.Process) string {
 	stream, err := p.Stdout()
 	var buff bytes.Buffer
 	if err == nil {
@@ -137,13 +129,13 @@ func (svc *RunitService) formatSTD(p *processman.Process) string {
 	return ""
 }
 
-func (svc *RunitService) startService() error {
+func (svc *RunService) startService() error {
 	if svc.conf == nil {
 		return fmt.Errorf("Service was not initialised!")
 	}
 	failed := false
 	for _, c := range svc.concurrentCommands {
-		go func(rsc *RunitServiceCommand) {
+		go func(rsc *RunServiceCommand) {
 			p, err := svc.procman.StartConcurrent(rsc.command, rsc.args, svc.env)
 			if err != nil {
 				log.Printf("Service %s failed background command '%s': %s\n", svc.GetServiceConfiguration().GetName(), rsc.command, err.Error())
@@ -172,16 +164,16 @@ func (svc *RunitService) startService() error {
 	return nil
 }
 
-func (svc *RunitService) Kill() error {
+func (svc *RunService) Kill() error {
 	return svc.procman.KillAll()
 }
 
-func (svc *RunitService) Stop() error {
+func (svc *RunService) Stop() error {
 	return svc.procman.StopAll()
 }
 
 // Restart service
-func (svc *RunitService) Restart() error {
+func (svc *RunService) Restart() error {
 	if err := svc.Stop(); err != nil {
 		return err
 	}

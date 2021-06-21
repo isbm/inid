@@ -86,7 +86,8 @@ func (svm *SVM) Init() error {
 		if kind != "service" && kind != "mount" {
 			continue
 		}
-		s := rsvc.NewRunitService().SetEnviron(svm.defaultEnv)
+		s := rsvc.NewRunService()
+		s.SetEnviron(svm.defaultEnv)
 		spath := path.Join(svm.confd, servConfPath.Name())
 		if err := s.Init(spath); err != nil {
 			return err
