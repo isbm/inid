@@ -133,7 +133,7 @@ func (ipm *InidPremounter) bulk(mount bool) []error {
 
 		if mount {
 			if err := ipm.Mount(device, fstype, mpath, opts); err != nil {
-				log.Printf("Mount error: %s", err.Error())
+				log.Printf("Error mounting %s on %s as %s with %s: %s", device, mpath, fstype, opts, err.Error())
 			}
 		} else {
 			log.Printf("Unmounting path %s", mpath)
