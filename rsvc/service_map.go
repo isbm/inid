@@ -15,7 +15,7 @@ func NewSvmServices() *SvmServices {
 	return svs
 }
 
-func (svs *SvmServices) AddService(service *RunitService) {
+func (svs *SvmServices) AddService(service InidService) {
 	if _, so := svs.services[service.GetServiceConfiguration().Stage]; !so {
 		svs.services[service.GetServiceConfiguration().Stage] = NewServiceOrder()
 	}
@@ -30,7 +30,7 @@ func (svs *SvmServices) GetStages() []uint8 {
 	return stages
 }
 
-func (svs *SvmServices) GetServiceByName(name string) (*RunitService, error) {
+func (svs *SvmServices) GetServiceByName(name string) (InidService, error) {
 	for _, so := range svs.services {
 		for _, s := range so.services {
 			if s.GetServiceConfiguration().GetName() == name {

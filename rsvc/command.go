@@ -4,14 +4,14 @@ import (
 	"strings"
 )
 
-type RunitServiceCommand struct {
+type RunServiceCommand struct {
 	command      string
 	args         []string
 	isConcurrent bool
 }
 
-func NewRunitServiceCommand(command string) *RunitServiceCommand {
-	svc := new(RunitServiceCommand)
+func NewRunServiceCommand(command string) *RunServiceCommand {
+	svc := new(RunServiceCommand)
 
 	commandTokens := strings.Split(command, " ")
 	svc.command = commandTokens[0]
@@ -21,12 +21,12 @@ func NewRunitServiceCommand(command string) *RunitServiceCommand {
 	return svc
 }
 
-func (svc *RunitServiceCommand) SetConcurrent(isConcurrent bool) *RunitServiceCommand {
+func (svc *RunServiceCommand) SetConcurrent(isConcurrent bool) *RunServiceCommand {
 	svc.isConcurrent = isConcurrent
 	return svc
 }
 
 // IsConcurrent returns true of the command supposed to be concurrent
-func (svc *RunitServiceCommand) IsConcurrent() bool {
+func (svc *RunServiceCommand) IsConcurrent() bool {
 	return svc.isConcurrent
 }
