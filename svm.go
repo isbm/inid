@@ -83,20 +83,20 @@ func (svm *SVM) Init() error {
 	for _, servConfPath := range filenames {
 		scpath := strings.Split(servConfPath.Name(), ".")
 		kind := scpath[len(scpath)-1]
-		if kind != "service" && kind != "mount" {
-			continue
-		}
-		s := rsvc.NewRunService()
-		s.SetEnviron(svm.defaultEnv)
-		spath := path.Join(svm.confd, servConfPath.Name())
-		if err := s.Init(spath); err != nil {
-			return err
-		}
+
+		var s rsvc.InidService
 		switch kind {
 		case "service":
-			s.GetServiceConfiguration().SetKind(rsvc.SVC_SERVICE)
+			s = rsvc.NewRunService()
 		case "mount":
-			s.GetServiceConfiguration().SetKind(rsvc.SVC_MOUNTER)
+			s = rsvc.NewMountService()
+		default:
+			continue
+		}
+
+		s.SetEnviron(svm.defaultEnv)
+		if err := s.Init(path.Join(svm.confd, servConfPath.Name())); err != nil {
+			return err
 		}
 		svm.services.AddService(s)
 	}
