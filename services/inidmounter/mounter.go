@@ -132,6 +132,7 @@ func (ipm *InidPremounter) bulk(mount bool) []error {
 		}
 
 		if mount {
+			log.Printf("Mounting %s on %s", device, mpath)
 			if err := ipm.Mount(device, fstype, mpath, opts); err != nil {
 				log.Printf("Error mounting %s on %s as %s with %s: %s", device, mpath, fstype, opts, err.Error())
 			}
